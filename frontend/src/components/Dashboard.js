@@ -26,7 +26,20 @@ const Dashboard = () => {
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8001/api';
 
   useEffect(() => {
-    fetchDashboardData();
+    // Test API connectivity first
+    const testConnection = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/health`);
+        console.log('API connection test successful:', response.data);
+        fetchDashboardData();
+      } catch (error) {
+        console.error('API connection test failed:', error);
+        setError('Cannot connect to backend API. Please ensure the backend service is running.');
+        setLoading(false);
+      }
+    };
+    
+    testConnection();
   }, []);
 
   const fetchDashboardData = async () => {
