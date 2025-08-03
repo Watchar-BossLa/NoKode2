@@ -37,11 +37,13 @@ const BlueprintCreator = () => {
   const fetchBlueprints = async () => {
     try {
       setLoading(true);
+      console.log('Fetching blueprints from:', API_BASE_URL);
       const response = await axios.get(`${API_BASE_URL}/blueprints`);
+      console.log('Blueprints loaded successfully:', response.data);
       setBlueprints(response.data);
     } catch (error) {
       console.error('Error fetching blueprints:', error);
-      toast.error('Failed to load blueprints');
+      toast.error('Failed to load blueprints. Please check your connection.');
     } finally {
       setLoading(false);
     }
