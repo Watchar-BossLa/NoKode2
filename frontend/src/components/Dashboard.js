@@ -183,6 +183,29 @@ const Dashboard = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            Dashboard Unavailable
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {error}
+          </p>
+          <button
+            onClick={retryFetch}
+            className="btn-primary flex items-center space-x-2 mx-auto"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Try Again</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 lg:p-8 min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
