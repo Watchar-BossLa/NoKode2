@@ -28,7 +28,7 @@ const BlueprintCreator = () => {
     components: []
   });
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8001/api';
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '/api';
 
   useEffect(() => {
     fetchBlueprints();
