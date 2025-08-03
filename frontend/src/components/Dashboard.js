@@ -12,14 +12,16 @@ import {
   CheckCircle,
   AlertCircle,
   Plus,
-  ArrowRight
+  ArrowRight,
+  RefreshCw
 } from 'lucide-react';
 
 const Dashboard = () => {
   const [analytics, setAnalytics] = useState(null);
-  const [agents, setAgents] = useState([]);
+  const [agents, setAgents] = useState([]);  
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8001/api';
 
@@ -30,21 +32,31 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      console.log('Fetching dashboard data from:', API_BASE_URL);
+      
       const [analyticsRes, agentsRes, projectsRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/analytics`),
         axios.get(`${API_BASE_URL}/agents`),
         axios.get(`${API_BASE_URL}/projects`)
       ]);
 
+      console.log('Dashboard data loaded successfully');
       setAnalytics(analyticsRes.data);
       setAgents(agentsRes.data);
       setProjects(projectsRes.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      setError('Failed to load dashboard data. Please check your connection.');
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
+  };
+
+  const retryFetch = () => {
+    fetchDashboardData();
   };
 
   const StatCard = ({ title, value, icon: Icon, color, trend }) => (
