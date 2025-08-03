@@ -8,13 +8,8 @@ from datetime import datetime
 
 class FastAPIGenerator:
     def __init__(self):
-        self.model_templates = {
-            "user": self._generate_user_model,
-            "product": self._generate_product_model,
-            "order": self._generate_order_model,
-            "post": self._generate_post_model,
-            "comment": self._generate_comment_model
-        }
+        # These are placeholder methods - models will be dynamically generated
+        pass
     
     def generate_backend_from_blueprint(self, blueprint: Dict[str, Any]) -> Dict[str, str]:
         """Generate complete FastAPI backend from blueprint"""
