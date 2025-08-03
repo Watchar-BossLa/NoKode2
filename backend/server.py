@@ -5,20 +5,35 @@ from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import uvicorn
 import os
+import logging
 from datetime import datetime
 import json
 import uuid
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="Nokode AgentOS", description="AI-Powered No-Code Platform", version="1.0.0")
 
-# CORS middleware
+# CORS middleware - more specific for production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Add request logging middleware
+@app.middleware("http")
+async def log_requests(request, call_next):
+    start_time = datetime.now()
+    logger.info(f"Request: {request.method} {request.url}")
+    response = await call_next(request)
+    process_time = (datetime.now() - start_time).total_seconds()
+    logger.info(f"Response: {response.status_code} - Time: {process_time:.4f}s")
+    return response
 
 # Mock database - in a real app, this would be MongoDB
 mock_db = {
