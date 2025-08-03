@@ -23,7 +23,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8001/api';
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '/api';
 
   useEffect(() => {
     // Test API connectivity first
