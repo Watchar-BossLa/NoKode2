@@ -18,6 +18,11 @@ from code_generators.project_generator import ProjectGenerator
 from code_generators.react_generator import ReactComponentGenerator
 from code_generators.fastapi_generator import FastAPIGenerator
 
+# Initialize code generators
+project_generator = ProjectGenerator()
+react_generator = ReactComponentGenerator()
+fastapi_generator = FastAPIGenerator()
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
