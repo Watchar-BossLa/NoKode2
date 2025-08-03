@@ -38,14 +38,105 @@ async def log_requests(request, call_next):
 # Mock database - in a real app, this would be MongoDB
 mock_db = {
     "agents": [
-        {"id": "1", "name": "FrontendAgent", "status": "online", "type": "frontend", "last_active": datetime.now().isoformat()},
-        {"id": "2", "name": "BackendAgent", "status": "online", "type": "backend", "last_active": datetime.now().isoformat()},
-        {"id": "3", "name": "DBAgent", "status": "idle", "type": "database", "last_active": datetime.now().isoformat()},
-        {"id": "4", "name": "QAAgent", "status": "online", "type": "testing", "last_active": datetime.now().isoformat()},
-        {"id": "5", "name": "DeploymentAgent", "status": "idle", "type": "deployment", "last_active": datetime.now().isoformat()}
+        {"id": "1", "name": "FrontendAgent", "status": "online", "type": "frontend", "last_active": datetime.now().isoformat(), "description": "Generates React components with Tailwind CSS", "tasks_completed": 156, "success_rate": 98},
+        {"id": "2", "name": "BackendAgent", "status": "online", "type": "backend", "last_active": datetime.now().isoformat(), "description": "Creates FastAPI endpoints and business logic", "tasks_completed": 142, "success_rate": 97},
+        {"id": "3", "name": "DBAgent", "status": "idle", "type": "database", "last_active": datetime.now().isoformat(), "description": "Designs schemas and manages migrations", "tasks_completed": 89, "success_rate": 95},
+        {"id": "4", "name": "QAAgent", "status": "online", "type": "testing", "last_active": datetime.now().isoformat(), "description": "Runs automated tests and quality checks", "tasks_completed": 234, "success_rate": 99},
+        {"id": "5", "name": "DeploymentAgent", "status": "idle", "type": "deployment", "last_active": datetime.now().isoformat(), "description": "Handles CI/CD pipelines and deployment", "tasks_completed": 67, "success_rate": 96}
     ],
-    "blueprints": [],
-    "projects": []
+    "blueprints": [
+        {
+            "id": "1",
+            "name": "E-commerce Platform",
+            "description": "Complete online store with payment integration, inventory management, and user authentication",
+            "components": [
+                {"type": "header", "name": "Navigation", "props": {"logo": "store", "menu": ["Home", "Products", "Cart", "Account"]}},
+                {"type": "hero", "name": "Hero Section", "props": {"title": "Welcome to Our Store", "cta": "Shop Now"}},
+                {"type": "product-grid", "name": "Product Grid", "props": {"columns": 4, "pagination": True}},
+                {"type": "footer", "name": "Footer", "props": {"links": ["About", "Contact", "Privacy"]}}
+            ],
+            "created_at": (datetime.now() - timedelta(days=5)).isoformat(),
+            "tags": ["React", "Stripe", "MongoDB", "Authentication"]
+        },
+        {
+            "id": "2", 
+            "name": "Blog CMS",
+            "description": "Content management system with markdown editor, SEO optimization, and comment system",
+            "components": [
+                {"type": "admin-panel", "name": "Admin Dashboard", "props": {"sections": ["Posts", "Users", "Analytics"]}},
+                {"type": "editor", "name": "Markdown Editor", "props": {"preview": True, "autosave": True}},
+                {"type": "blog-layout", "name": "Blog Layout", "props": {"sidebar": True, "comments": True}}
+            ],
+            "created_at": (datetime.now() - timedelta(days=3)).isoformat(),
+            "tags": ["Next.js", "Markdown", "SEO", "CMS"]
+        },
+        {
+            "id": "3",
+            "name": "SaaS Dashboard",
+            "description": "Analytics dashboard with charts, user management, and subscription billing",
+            "components": [
+                {"type": "dashboard", "name": "Main Dashboard", "props": {"charts": ["line", "bar", "pie"], "widgets": 8}},
+                {"type": "user-management", "name": "User Management", "props": {"roles": ["admin", "user"], "permissions": True}},
+                {"type": "billing", "name": "Billing System", "props": {"plans": ["basic", "pro", "enterprise"]}}
+            ],
+            "created_at": (datetime.now() - timedelta(days=1)).isoformat(),
+            "tags": ["Vue.js", "Charts", "Billing", "Analytics"]
+        }
+    ],
+    "projects": [
+        {
+            "id": "1",
+            "name": "TechStore Pro",
+            "description": "Modern e-commerce platform for electronics with advanced filtering and reviews",
+            "blueprint_id": "1",
+            "status": "completed",
+            "progress": 100,
+            "created_at": (datetime.now() - timedelta(days=12)).isoformat(),
+            "frontend_code": "Complete React application with 15 components",
+            "backend_code": "FastAPI with 25 endpoints and payment integration",
+            "tags": ["React", "FastAPI", "Stripe", "PostgreSQL"],
+            "deployment_url": "https://techstore-pro.vercel.app"
+        },
+        {
+            "id": "2",
+            "name": "DevBlog Central",
+            "description": "Developer-focused blog platform with syntax highlighting and code snippets",
+            "blueprint_id": "2", 
+            "status": "in-progress",
+            "progress": 75,
+            "created_at": (datetime.now() - timedelta(days=8)).isoformat(),
+            "frontend_code": "Next.js application with markdown support",
+            "backend_code": "Node.js API with user authentication",
+            "tags": ["Next.js", "Markdown", "Prisma", "Auth0"],
+            "deployment_url": None
+        },
+        {
+            "id": "3",
+            "name": "Analytics Suite",
+            "description": "Business intelligence dashboard with real-time data visualization",
+            "blueprint_id": "3",
+            "status": "in-progress", 
+            "progress": 45,
+            "created_at": (datetime.now() - timedelta(days=3)).isoformat(),
+            "frontend_code": "Vue.js dashboard with Chart.js integration",
+            "backend_code": "Python FastAPI with data processing",
+            "tags": ["Vue.js", "Python", "Chart.js", "Redis"],
+            "deployment_url": None
+        },
+        {
+            "id": "4",
+            "name": "TaskFlow",
+            "description": "Project management tool with team collaboration and time tracking",
+            "blueprint_id": None,
+            "status": "planning",
+            "progress": 15,
+            "created_at": (datetime.now() - timedelta(days=1)).isoformat(),
+            "frontend_code": None,
+            "backend_code": None,
+            "tags": ["React", "Socket.IO", "MongoDB", "JWT"],
+            "deployment_url": None
+        }
+    ]
 }
 
 # Pydantic models
