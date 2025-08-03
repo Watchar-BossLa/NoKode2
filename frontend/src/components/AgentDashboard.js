@@ -33,11 +33,13 @@ const AgentDashboard = () => {
   const fetchAgents = async () => {
     try {
       setLoading(true);
+      console.log('Fetching agents from:', API_BASE_URL);
       const response = await axios.get(`${API_BASE_URL}/agents`);
+      console.log('Agents loaded successfully:', response.data);
       setAgents(response.data);
     } catch (error) {
       console.error('Error fetching agents:', error);
-      toast.error('Failed to load agent data');
+      toast.error('Failed to load agent data. Please check your connection.');
     } finally {
       setLoading(false);
     }
