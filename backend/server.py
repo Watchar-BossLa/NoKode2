@@ -269,41 +269,141 @@ async def create_project(project: Project):
 
 @app.post("/api/generate-code")
 async def generate_code(request: CodeGenerationRequest):
-    """Generate code from blueprint"""
+    """Generate real code from blueprint using AI agents"""
     blueprint = next((b for b in mock_db["blueprints"] if b["id"] == request.blueprint_id), None)
     if not blueprint:
         raise HTTPException(status_code=404, detail="Blueprint not found")
     
-    # Mock code generation - in real implementation, this would use AI agents
-    if request.target == "frontend":
-        component_name = blueprint['name'].replace(' ', '')
-        generated_code = f"""import React from 'react';
+    try:
+        logger.info(f"Generating {request.target} code for blueprint: {blueprint['name']}")
+        
+        if request.target == "frontend":
+            # Generate real React components
+            generated_files = react_generator.generate_app_from_blueprint(blueprint)
+            
+            # Get the main App component as preview
+            main_component = generated_files.get("App.jsx", "")
+            
+            return {
+                "code": main_component,
+                "target": request.target,
+                "blueprint_id": request.blueprint_id,
+                "generated_at": datetime.now().isoformat(),
+                "files_generated": len(generated_files),
+                "files": list(generated_files.keys()),
+                "message": f"Generated {len(generated_files)} React components with Tailwind CSS"
+            }
+            
+        elif request.target == "backend":
+            # Generate real FastAPI backend
+            generated_files = fastapi_generator.generate_backend_from_blueprint(blueprint)
+            
+            # Get the main FastAPI app as preview
+            main_app = generated_files.get("main.py", "")
+            
+            return {
+                "code": main_app,
+                "target": request.target,
+                "blueprint_id": request.blueprint_id,
+                "generated_at": datetime.now().isoformat(),
+                "files_generated": len(generated_files),
+                "files": list(generated_files.keys()),
+                "message": f"Generated FastAPI backend with {len(generated_files)} files including models and routes"
+            }
+        
+        else:
+            raise HTTPException(status_code=400, detail="Invalid target. Use 'frontend' or 'backend'")
+            
+    except Exception as e:
+        logger.error(f"Code generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Code generation failed: {str(e)}")
 
-export default function {component_name}() {{
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold">{blueprint['name']}</h1>
-      <p className="text-gray-600 mt-2">{blueprint['description']}</p>
-      {{/* Generated components will appear here */}}
-    </div>
-  );
-}}"""
-    else:
-        generated_code = f"""from fastapi import FastAPI
+@app.post("/api/generate-project")
+async def generate_full_project(blueprint_id: str):
+    """Generate a complete full-stack project"""
+    blueprint = next((b for b in mock_db["blueprints"] if b["id"] == blueprint_id), None)
+    if not blueprint:
+        raise HTTPException(status_code=404, detail="Blueprint not found")
+    
+    try:
+        logger.info(f"Generating full-stack project for blueprint: {blueprint['name']}")
+        
+        # Generate complete project structure
+        project_structure = project_generator.generate_full_project(blueprint)
+        
+        # Get project statistics
+        project_stats = project_generator.get_project_stats(project_structure)
+        
+        # Create a new project record
+        new_project = {
+            "id": str(uuid.uuid4()),
+            "name": f"{blueprint['name']} - Generated App",
+            "description": f"Full-stack application generated from {blueprint['name']} blueprint",
+            "blueprint_id": blueprint_id,
+            "status": "completed",
+            "progress": 100,
+            "created_at": datetime.now().isoformat(),
+            "frontend_code": f"Generated {project_stats['frontend_files']} React components",
+            "backend_code": f"Generated {project_stats['backend_files']} FastAPI files",
+            "tags": project_stats['technologies']['frontend'] + project_stats['technologies']['backend'],
+            "deployment_url": None,
+            "project_structure": project_structure,
+            "stats": project_stats
+        }
+        
+        # Add to projects database
+        mock_db["projects"].append(new_project)
+        
+        return {
+            "project": new_project,
+            "message": f"Generated complete full-stack project with {project_stats['total_files']} files",
+            "stats": project_stats
+        }
+        
+    except Exception as e:
+        logger.error(f"Project generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Project generation failed: {str(e)}")
 
-app = FastAPI(title="{blueprint['name']}")
+@app.get("/api/download-project/{project_id}")
+async def download_project(project_id: str):
+    """Download generated project as ZIP file"""
+    project = next((p for p in mock_db["projects"] if p["id"] == project_id), None)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if "project_structure" not in project:
+        raise HTTPException(status_code=400, detail="Project structure not available for download")
+    
+    try:
+        # Create ZIP file
+        zip_path = project_generator.create_project_zip(project["project_structure"])
+        
+        # Return file for download
+        return FileResponse(
+            path=zip_path,
+            filename=f"{project['name'].replace(' ', '-').lower()}.zip",
+            media_type="application/zip"
+        )
+        
+    except Exception as e:
+        logger.error(f"Project download failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Project download failed: {str(e)}")
 
-@app.get("/")
-async def root():
-    return {{"message": "Welcome to {blueprint['name']}"}}
-
-# Generated API endpoints will appear here"""
+@app.get("/api/project-files/{project_id}")
+async def get_project_files(project_id: str):
+    """Get all generated files for a project"""
+    project = next((p for p in mock_db["projects"] if p["id"] == project_id), None)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if "project_structure" not in project:
+        raise HTTPException(status_code=400, detail="Project structure not available")
     
     return {
-        "code": generated_code,
-        "target": request.target,
-        "blueprint_id": request.blueprint_id,
-        "generated_at": datetime.now().isoformat()
+        "project_id": project_id,
+        "project_name": project["name"],
+        "files": project["project_structure"]["files"],
+        "stats": project.get("stats", {})
     }
 
 @app.get("/api/analytics")
