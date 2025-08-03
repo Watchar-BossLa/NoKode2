@@ -24,7 +24,7 @@ const AgentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8001/api';
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '/api';
 
   useEffect(() => {
     fetchAgents();
