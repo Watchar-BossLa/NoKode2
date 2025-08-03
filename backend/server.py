@@ -143,14 +143,15 @@ async def generate_code(request: CodeGenerationRequest):
     
     # Mock code generation - in real implementation, this would use AI agents
     if request.target == "frontend":
+        component_name = blueprint['name'].replace(' ', '')
         generated_code = f"""import React from 'react';
 
-export default function {blueprint['name'].replace(' ', '')}() {{
+export default function {component_name}() {{
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold">{blueprint['name']}</h1>
       <p className="text-gray-600 mt-2">{blueprint['description']}</p>
-      {/* Generated components will appear here */}
+      {{/* Generated components will appear here */}}
     </div>
   );
 }}"""
