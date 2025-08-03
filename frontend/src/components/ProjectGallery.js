@@ -31,7 +31,7 @@ const ProjectGallery = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8001/api';
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '/api';
 
   useEffect(() => {
     fetchProjects();
