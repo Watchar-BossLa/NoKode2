@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import uvicorn
@@ -9,6 +10,13 @@ import logging
 from datetime import datetime, timedelta
 import json
 import uuid
+import tempfile
+import shutil
+
+# Import code generators
+from code_generators.project_generator import ProjectGenerator
+from code_generators.react_generator import ReactComponentGenerator
+from code_generators.fastapi_generator import FastAPIGenerator
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
