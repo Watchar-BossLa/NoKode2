@@ -40,47 +40,15 @@ const ProjectGallery = () => {
   const fetchProjects = async () => {
     try {
       setLoading(true);
+      console.log('Fetching projects from:', API_BASE_URL);
       const response = await axios.get(`${API_BASE_URL}/projects`);
-      // Add some mock data for demo purposes
-      const mockProjects = [
-        {
-          id: '1',
-          name: 'E-commerce Dashboard',
-          status: 'completed',
-          created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-          description: 'A modern e-commerce admin dashboard with analytics and inventory management.',
-          tags: ['React', 'Tailwind', 'Charts'],
-          progress: 100,
-          frontend_code: 'Generated React components',
-          backend_code: 'FastAPI endpoints'
-        },
-        {
-          id: '2',
-          name: 'Blog Platform',
-          status: 'in-progress',
-          created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
-          description: 'A full-featured blog platform with markdown support and user authentication.',
-          tags: ['Next.js', 'MongoDB', 'Auth'],
-          progress: 75,
-          frontend_code: 'Generated blog components',
-          backend_code: 'API routes for blog'
-        },
-        {
-          id: '3',
-          name: 'Task Manager',
-          status: 'planning',
-          created_at: new Date(Date.now() - 86400000 * 1).toISOString(),
-          description: 'A collaborative task management app with real-time updates.',
-          tags: ['Vue.js', 'WebSocket', 'Collaboration'],
-          progress: 25,
-          frontend_code: null,
-          backend_code: null
-        }
-      ];
-      setProjects([...response.data, ...mockProjects]);
+      console.log('Projects loaded successfully:', response.data);
+      
+      // The response already contains mock data, so we use it directly
+      setProjects(response.data);
     } catch (error) {
       console.error('Error fetching projects:', error);
-      toast.error('Failed to load projects');
+      toast.error('Failed to load projects. Please check your connection.');
     } finally {
       setLoading(false);
     }
