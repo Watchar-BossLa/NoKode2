@@ -49,19 +49,31 @@ const Dashboard = () => {
       
       console.log('Fetching dashboard data from:', API_BASE_URL);
       
-      const [analyticsRes, agentsRes, projectsRes] = await Promise.all([
+      const requests = [
         axios.get(`${API_BASE_URL}/analytics`),
         axios.get(`${API_BASE_URL}/agents`),
         axios.get(`${API_BASE_URL}/projects`)
-      ]);
+      ];
+      
+      const [analyticsRes, agentsRes, projectsRes] = await Promise.all(requests);
 
       console.log('Dashboard data loaded successfully');
+      console.log('Analytics:', analyticsRes.data);
+      console.log('Agents:', agentsRes.data);
+      console.log('Projects:', projectsRes.data);
+      
       setAnalytics(analyticsRes.data);
       setAgents(agentsRes.data);
       setProjects(projectsRes.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      setError('Failed to load dashboard data. Please check your connection.');
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        config: error.config
+      });
+      setError(`Failed to load dashboard data: ${error.message}`);
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
