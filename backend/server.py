@@ -175,7 +175,16 @@ class CodeGenerationRequest(BaseModel):
 # API Routes
 @app.get("/api/health")
 async def health_check():
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    logger.info("Health check requested")
+    return {
+        "status": "healthy", 
+        "timestamp": datetime.now().isoformat(),
+        "message": "Nokode AgentOS API is running successfully"
+    }
+
+@app.get("/")
+async def root():
+    return {"message": "Nokode AgentOS API", "status": "running", "docs": "/docs"}
 
 @app.get("/api/agents", response_model=List[Agent])
 async def get_agents():
