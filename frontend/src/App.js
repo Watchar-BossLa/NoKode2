@@ -54,6 +54,11 @@ function App() {
     { name: 'Blueprints', href: '/blueprints', icon: FileText, view: 'blueprints' },
     { name: 'Code Editor', href: '/editor', icon: Code, view: 'editor' },
     { name: 'Projects', href: '/projects', icon: FolderOpen, view: 'projects' },
+    // Phase 2 Navigation
+    { name: 'AI Hub', href: '/ai-hub', icon: Brain, view: 'ai-hub' },
+    { name: 'Workflows', href: '/workflows', icon: Workflow, view: 'workflows' },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3, view: 'analytics' },
+    { name: 'API Gateway', href: '/gateway', icon: Globe, view: 'gateway' },
   ];
 
   const renderCurrentView = () => {
