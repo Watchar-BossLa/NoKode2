@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -15,8 +15,14 @@ import shutil
 
 # Import code generators
 from code_generators.project_generator import ProjectGenerator
-from code_generators.react_generator import ReactComponentGenerator
+from code_generators.react_generator import ReactComponentGenerator  
 from code_generators.fastapi_generator import FastAPIGenerator
+
+# Import enterprise services
+from services.ml_blueprint_analyzer import ml_analyzer, BlueprintAnalysis
+from services.realtime_collaboration import collaboration_manager
+from services.multi_tenant_auth import auth_manager, get_current_user, get_current_tenant, require_role, UserRole
+from services.observability_stack import observability, track_request, record_metric, record_error
 
 # Initialize code generators
 project_generator = ProjectGenerator()
