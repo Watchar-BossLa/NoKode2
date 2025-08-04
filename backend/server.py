@@ -44,6 +44,36 @@ except ImportError:
     logger.warning("Multi-tenant Auth not available - some dependencies missing")
     AUTH_ENABLED = False
 
+# Import Phase 2 enterprise services
+try:
+    from services.ai_integration_hub import ai_hub, CodeGenerationRequest, CodeLanguage, AIProvider
+    AI_HUB_ENABLED = True
+except ImportError:
+    logger.warning("AI Integration Hub not available - some dependencies missing")
+    AI_HUB_ENABLED = False
+
+try:
+    from services.workflow_automation import workflow_engine, Workflow, WorkflowExecution
+    WORKFLOW_ENABLED = True
+except ImportError:
+    logger.warning("Workflow Automation not available - some dependencies missing")
+    WORKFLOW_ENABLED = False
+
+try:
+    from services.enterprise_analytics import enterprise_analytics
+    ANALYTICS_ENABLED = True
+except ImportError:
+    logger.warning("Enterprise Analytics not available - some dependencies missing")
+    ANALYTICS_ENABLED = False
+
+try:
+    from services.api_gateway import api_gateway, APIRequest, APIResponse
+    API_GATEWAY_ENABLED = True
+except ImportError:
+    logger.warning("API Gateway not available - some dependencies missing")
+    API_GATEWAY_ENABLED = False
+
+# Legacy observability support (for backward compatibility)
 try:
     from services.observability_stack import observability, track_request, record_metric, record_error
     OBSERVABILITY_ENABLED = True
