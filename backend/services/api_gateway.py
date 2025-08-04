@@ -16,6 +16,7 @@ import redis
 from urllib.parse import urlparse
 import hashlib
 import time
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
