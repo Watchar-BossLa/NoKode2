@@ -200,7 +200,7 @@ const EnterpriseAnalytics = () => {
         case 'pie_chart':
           return (
             <ResponsiveContainer width="100%" height={300}>
-              <RechartsPieChart>
+              <PieChart>
                 <Pie
                   data={chartData}
                   dataKey={widget.config.value}
@@ -216,7 +216,7 @@ const EnterpriseAnalytics = () => {
                 </Pie>
                 <Tooltip />
                 <Legend />
-              </RechartsPieChart>
+              </PieChart>
             </ResponsiveContainer>
           );
 
