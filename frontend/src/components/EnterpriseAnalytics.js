@@ -4,7 +4,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { 
   BarChart3, 
-  PieChart, 
+  PieChart as PieChartIcon, 
   TrendingUp, 
   Activity, 
   Users, 
@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 // Import recharts conditionally to avoid build errors
-let LineChart, Line, BarChart, Bar, PieChart as RechartsPieChart, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Pie;
+let LineChart, Line, BarChart, Bar, PieChart, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Pie;
 
 try {
   const recharts = require('recharts');
@@ -33,7 +33,7 @@ try {
   Line = recharts.Line;
   BarChart = recharts.BarChart;
   Bar = recharts.Bar;
-  RechartsPieChart = recharts.PieChart;
+  PieChart = recharts.PieChart;
   Cell = recharts.Cell;
   XAxis = recharts.XAxis;
   YAxis = recharts.YAxis;
