@@ -163,6 +163,19 @@ const EnterpriseAnalytics = () => {
     }, [data]);
 
     const renderChart = () => {
+      // Check if recharts is available
+      if (!LineChart || !BarChart || !PieChart) {
+        return (
+          <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+            <div className="text-center">
+              <BarChart3 className="w-12 h-12 mx-auto mb-2" />
+              <p>Charts loading...</p>
+              <p className="text-xs">Recharts dependency required</p>
+            </div>
+          </div>
+        );
+      }
+
       switch (widget.config.type || widget.type) {
         case 'line_chart':
           return (
