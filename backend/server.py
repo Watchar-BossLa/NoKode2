@@ -97,10 +97,12 @@ app.add_middleware(
 async def log_requests(request, call_next):
     start_time = datetime.now()
     
-    # Extract tenant from host header  
-    host = request.headers.get("host", "localhost")
-    tenant = await auth_manager.get_tenant_by_domain(host.split(":")[0])
-    tenant_id = tenant.id if tenant else "default"
+    # Extract tenant from host header (if auth is enabled)
+    tenant_id = "default"
+    if AUTH_ENABLED:
+        host = request.headers.get("host", "localhost")
+        tenant = await auth_manager.get_tenant_by_domain(host.split(":")[0])
+        tenant_id = tenant.id if tenant else "default"
     
     logger.info(f"Request: {request.method} {request.url}")
     response = await call_next(request)
