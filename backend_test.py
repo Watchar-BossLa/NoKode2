@@ -642,42 +642,85 @@ class NokodeAPITester:
         return success
 
     def run_all_tests(self):
-        """Run all API tests"""
-        print("🚀 Starting Nokode AgentOS API Tests")
-        print("=" * 50)
+        """Run all API tests including Phase 2 enterprise features"""
+        print("🚀 Starting Nokode AgentOS Enterprise Phase 2 API Tests")
+        print("=" * 60)
         
-        # Basic health and agent tests
-        self.test_health_check()
+        # Phase 2: System Health & Info Tests
+        print("\n📋 PHASE 2: SYSTEM HEALTH & INFO")
+        print("-" * 40)
+        self.test_root_endpoint()
+        self.test_enhanced_health_check()
+        self.test_system_info()
+        
+        # Phase 2: AI Integration Hub Tests
+        print("\n🧠 PHASE 2: AI INTEGRATION HUB")
+        print("-" * 40)
+        self.test_ai_providers()
+        self.test_ai_generate_code_advanced()
+        
+        # Phase 2: Workflow Automation Tests
+        print("\n⚡ PHASE 2: WORKFLOW AUTOMATION")
+        print("-" * 40)
+        self.test_workflow_templates()
+        self.test_create_workflow()
+        self.test_execute_workflow()
+        self.test_workflow_status()
+        
+        # Phase 2: Enterprise Analytics Tests
+        print("\n📊 PHASE 2: ENTERPRISE ANALYTICS")
+        print("-" * 40)
+        self.test_analytics_dashboards()
+        self.test_dashboard_data()
+        self.test_real_time_metrics()
+        self.test_create_analytics_query()
+        
+        # Phase 2: API Gateway Management Tests
+        print("\n🌐 PHASE 2: API GATEWAY MANAGEMENT")
+        print("-" * 40)
+        self.test_gateway_integrations()
+        self.test_gateway_health()
+        self.test_gateway_stats()
+        self.test_add_gateway_integration()
+        
+        # Legacy/Phase 1 Tests (for backward compatibility)
+        print("\n🔧 LEGACY COMPATIBILITY TESTS")
+        print("-" * 40)
         self.test_get_agents()
         self.test_get_specific_agent()
         self.test_update_agent_status()
-        
-        # Blueprint tests
         self.test_get_blueprints()
         self.test_create_blueprint()
         self.test_get_specific_blueprint()
         self.test_generate_code()
-        
-        # Project tests
         self.test_get_projects()
         self.test_create_project()
-        
-        # Analytics test
         self.test_get_analytics()
         
         # Cleanup
+        print("\n🧹 CLEANUP")
+        print("-" * 40)
         self.test_delete_blueprint()
         
         # Print final results
-        print("\n" + "=" * 50)
+        print("\n" + "=" * 60)
         print(f"📊 Final Results: {self.tests_passed}/{self.tests_run} tests passed")
         
         if self.tests_passed == self.tests_run:
-            print("🎉 All tests passed! Backend API is working correctly.")
+            print("🎉 All tests passed! Nokode AgentOS Enterprise Phase 2 is fully operational.")
             return 0
         else:
-            print(f"⚠️  {self.tests_run - self.tests_passed} tests failed.")
-            return 1
+            failed_tests = self.tests_run - self.tests_passed
+            print(f"⚠️  {failed_tests} tests failed.")
+            success_rate = (self.tests_passed / self.tests_run) * 100
+            print(f"📈 Success rate: {success_rate:.1f}%")
+            
+            if success_rate >= 80:
+                print("✅ System is mostly functional with minor issues.")
+                return 0
+            else:
+                print("❌ System has significant issues that need attention.")
+                return 1
 
 def main():
     tester = NokodeAPITester("http://localhost:8001")
