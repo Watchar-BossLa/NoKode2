@@ -485,16 +485,33 @@ async def configure_tenant_sso(tenant_id: str, sso_config: dict, user=Depends(re
 # Enhanced Blueprint & Project endpoints with enterprise features
 @app.get("/api/health")
 async def health_check():
-    logger.info("Health check requested")
-    return {
-        "status": "healthy", 
-        "timestamp": datetime.now().isoformat(),
-        "message": "Nokode AgentOS API is running successfully"
-    }
+    """Enhanced health check with detailed status"""
+    try:
+        health_data = {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "service": "Nokode AgentOS Enterprise",
+            "version": "2.0.0",
+            "message": "Enterprise AI-powered no-code platform is running"
+        }
+        
+        return health_data
+        
+    except Exception as e:
+        return {
+            "status": "unhealthy", 
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e)
+        }
 
 @app.get("/")
 async def root():
-    return {"message": "Nokode AgentOS API", "status": "running", "docs": "/docs"}
+    return {
+        "message": "Nokode AgentOS Enterprise API", 
+        "status": "running", 
+        "version": "2.0.0",
+        "docs": "/docs"
+    }
 
 @app.get("/api/agents", response_model=List[Agent])
 async def get_agents():
