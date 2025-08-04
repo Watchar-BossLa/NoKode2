@@ -27,7 +27,11 @@ import {
   FolderOpen, 
   Menu, 
   X,
-  Sparkles
+  Sparkles,
+  Brain,
+  Workflow,
+  BarChart3,
+  Globe
 } from 'lucide-react';
 
 function App() {
