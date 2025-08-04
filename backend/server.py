@@ -257,6 +257,9 @@ class CodeGenerationRequest(BaseModel):
 @track_request("POST", "/api/auth/register")
 async def register(request_data: dict, tenant: dict = Depends(get_current_tenant)):
     """Register a new user"""
+    if not AUTH_ENABLED:
+        raise HTTPException(status_code=503, detail="Authentication service not available")
+    
     try:
         user = await auth_manager.register_user(tenant["id"], request_data)
         record_metric("user_registered", 1, {"tenant_id": tenant["id"]})
