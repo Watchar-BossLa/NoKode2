@@ -177,8 +177,8 @@ class APIGateway:
                 headers={"Content-Type": "application/json", "anthropic-version": "2023-06-01"}
             ),
             rate_limits=[
-                RateLimit(RateLimitType.PER_MINUTE, 50),
-                RateLimit(RateLimitType.PER_DAY, 800)
+                RateLimit(RateLimitType.PER_MINUTE, 50, 60),
+                RateLimit(RateLimitType.PER_DAY, 800, 86400)
             ]
         )
         
