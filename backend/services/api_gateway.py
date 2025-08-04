@@ -159,8 +159,8 @@ class APIGateway:
                 headers={"Content-Type": "application/json"}
             ),
             rate_limits=[
-                RateLimit(RateLimitType.PER_MINUTE, 60),
-                RateLimit(RateLimitType.PER_DAY, 1000)
+                RateLimit(RateLimitType.PER_MINUTE, 60, 60),
+                RateLimit(RateLimitType.PER_DAY, 1000, 86400)
             ],
             health_check_url="https://api.openai.com/v1/models"
         )
