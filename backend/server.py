@@ -74,8 +74,9 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Start observability stack
-observability.start_monitoring()
+# Start observability stack if available
+if OBSERVABILITY_ENABLED:
+    observability.start_monitoring()
 
 # CORS middleware - production-ready configuration
 app.add_middleware(
