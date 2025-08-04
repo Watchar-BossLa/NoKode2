@@ -211,7 +211,7 @@ class APIGateway:
                 headers={"Accept": "application/vnd.github.v3+json"}
             ),
             rate_limits=[
-                RateLimit(RateLimitType.PER_HOUR, 5000)
+                RateLimit(RateLimitType.PER_HOUR, 5000, 3600)
             ],
             health_check_url="https://api.github.com/user"
         )
