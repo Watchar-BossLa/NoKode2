@@ -356,6 +356,12 @@ async def logout(user=Depends(get_current_user)):
 @track_request("POST", "/api/blueprints/analyze")
 async def analyze_blueprint(blueprint_id: str, user=Depends(get_current_user)):
     """Get ML-powered blueprint analysis"""
+    if not ML_ENABLED:
+        raise HTTPException(status_code=503, detail="ML Blueprint Analyzer not available")
+    
+    if not AUTH_ENABLED:
+        raise HTTPException(status_code=503, detail="Authentication service not available")
+    
     try:
         blueprint = next((b for b in mock_db["blueprints"] if b["id"] == blueprint_id), None)
         if not blueprint:
