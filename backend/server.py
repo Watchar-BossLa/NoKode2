@@ -272,6 +272,9 @@ async def register(request_data: dict, tenant: dict = Depends(get_current_tenant
 @track_request("POST", "/api/auth/login")
 async def login(request: Request, credentials: dict):
     """Authenticate user"""
+    if not AUTH_ENABLED:
+        raise HTTPException(status_code=503, detail="Authentication service not available")
+    
     try:
         # Get client info
         ip_address = request.client.host
