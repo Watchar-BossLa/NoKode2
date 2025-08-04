@@ -75,6 +75,15 @@ function App() {
         return <CodeEditor />;
       case 'projects':
         return <ProjectGallery />;
+      // Phase 2 Views
+      case 'ai-hub':
+        return <AIHub />;
+      case 'workflows':
+        return <WorkflowDashboard />;
+      case 'analytics':
+        return <EnterpriseAnalytics />;
+      case 'gateway':
+        return <APIGateway />;
       default:
         return <Landing onGetStarted={() => setCurrentView('dashboard')} />;
     }
