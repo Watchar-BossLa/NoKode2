@@ -267,7 +267,7 @@ class APIGateway:
                 method="POST",
                 integration_id="perplexity",
                 upstream_path="/chat/completions",
-                rate_limits=[RateLimit(RateLimitType.PER_MINUTE, 10)]
+                rate_limits=[RateLimit(RateLimitType.PER_MINUTE, 10, 60)]
             )
         ]
         
