@@ -23,20 +23,28 @@ import {
   Settings,
   Plus
 } from 'lucide-react';
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart as RechartsPieChart,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer
-} from 'recharts';
+
+// Import recharts conditionally to avoid build errors
+let LineChart, Line, BarChart, Bar, PieChart as RechartsPieChart, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Pie;
+
+try {
+  const recharts = require('recharts');
+  LineChart = recharts.LineChart;
+  Line = recharts.Line;
+  BarChart = recharts.BarChart;
+  Bar = recharts.Bar;
+  RechartsPieChart = recharts.PieChart;
+  Cell = recharts.Cell;
+  XAxis = recharts.XAxis;
+  YAxis = recharts.YAxis;
+  CartesianGrid = recharts.CartesianGrid;
+  Tooltip = recharts.Tooltip;
+  Legend = recharts.Legend;
+  ResponsiveContainer = recharts.ResponsiveContainer;
+  Pie = recharts.Pie;
+} catch (error) {
+  console.warn('Recharts not available, charts will be disabled');
+}
 
 const EnterpriseAnalytics = () => {
   const [dashboards, setDashboards] = useState([]);
