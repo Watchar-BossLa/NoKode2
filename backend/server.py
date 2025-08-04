@@ -490,40 +490,6 @@ async def get_metrics(user=Depends(require_role(UserRole.TENANT_ADMIN))):
         record_error(e, {"endpoint": "metrics"})
         raise
 
-@app.get("/api/health")
-async def health_check():
-    """Enhanced health check with detailed status"""
-    try:
-        health_data = {
-            "status": "healthy",
-            "timestamp": datetime.now().isoformat(),
-            "service": "Nokode AgentOS Enterprise",
-            "version": "2.0.0",
-            "features": {
-                "ml_enabled": ML_ENABLED,
-                "collaboration_enabled": COLLABORATION_ENABLED,
-                "auth_enabled": AUTH_ENABLED,
-                "observability_enabled": OBSERVABILITY_ENABLED
-            }
-        }
-        
-        if OBSERVABILITY_ENABLED:
-            health_data["uptime_seconds"] = observability.get_metrics_summary()["uptime_seconds"]
-            health_data["checks"] = observability.health_checks
-            
-            # Determine overall status
-            if any(check.status != "healthy" for check in observability.health_checks.values()):
-                health_data["status"] = "degraded"
-        
-        return health_data
-        
-    except Exception as e:
-        record_error(e, {"endpoint": "health"})
-        return {
-            "status": "unhealthy", 
-            "timestamp": datetime.now().isoformat(),
-            "error": str(e)
-        }
 
 @app.get("/api/alerts")
 @track_request("GET", "/api/alerts")
