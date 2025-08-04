@@ -18,11 +18,50 @@ from code_generators.project_generator import ProjectGenerator
 from code_generators.react_generator import ReactComponentGenerator  
 from code_generators.fastapi_generator import FastAPIGenerator
 
-# Import enterprise services
-from services.ml_blueprint_analyzer import ml_analyzer, BlueprintAnalysis
-from services.realtime_collaboration import collaboration_manager
-from services.multi_tenant_auth import auth_manager, get_current_user, get_current_tenant, require_role, UserRole
-from services.observability_stack import observability, track_request, record_metric, record_error
+# Configure logging first (needed for import warnings)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Import enterprise services (with fallbacks for missing dependencies)
+try:
+    from services.ml_blueprint_analyzer import ml_analyzer
+    ML_ENABLED = True
+except ImportError:
+    logger.warning("ML Blueprint Analyzer not available - some dependencies missing")
+    ML_ENABLED = False
+
+try:
+    from services.realtime_collaboration import collaboration_manager
+    COLLABORATION_ENABLED = True
+except ImportError:
+    logger.warning("Real-time Collaboration not available - Redis may not be configured")
+    COLLABORATION_ENABLED = False
+
+try:
+    from services.multi_tenant_auth import auth_manager, get_current_user, get_current_tenant, require_role, UserRole
+    AUTH_ENABLED = True
+except ImportError:
+    logger.warning("Multi-tenant Auth not available - some dependencies missing")
+    AUTH_ENABLED = False
+
+try:
+    from services.observability_stack import observability, track_request, record_metric, record_error
+    OBSERVABILITY_ENABLED = True
+except ImportError:
+    logger.warning("Observability Stack not available - monitoring dependencies missing")
+    OBSERVABILITY_ENABLED = False
+    
+    # Create no-op functions
+    def track_request(method, endpoint, tenant_id=""):
+        def decorator(func):
+            return func
+        return decorator
+    
+    def record_metric(name, value=1, labels=None):
+        pass
+    
+    def record_error(error, context=None):
+        pass
 
 # Initialize code generators
 project_generator = ProjectGenerator()
