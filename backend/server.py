@@ -585,17 +585,408 @@ async def health_check():
             "timestamp": datetime.now().isoformat(),
             "service": "Nokode AgentOS Enterprise",
             "version": "2.0.0",
-            "message": "Enterprise AI-powered no-code platform is running"
+            "message": "Enterprise AI-powered no-code platform is running",
+            "features": {
+                "ml_enabled": ML_ENABLED,
+                "collaboration_enabled": COLLABORATION_ENABLED,
+                "auth_enabled": AUTH_ENABLED,
+                "observability_enabled": OBSERVABILITY_ENABLED,
+                "ai_hub_enabled": AI_HUB_ENABLED,
+                "workflow_enabled": WORKFLOW_ENABLED,
+                "analytics_enabled": ANALYTICS_ENABLED,
+                "api_gateway_enabled": API_GATEWAY_ENABLED
+            }
         }
+        
+        if OBSERVABILITY_ENABLED:
+            health_data["uptime_seconds"] = observability.get_metrics_summary()["uptime_seconds"]
+            health_data["checks"] = observability.health_checks
+            
+            # Determine overall status
+            if any(check.status != "healthy" for check in observability.health_checks.values()):
+                health_data["status"] = "degraded"
         
         return health_data
         
     except Exception as e:
+        record_error(e, {"endpoint": "health"})
         return {
             "status": "unhealthy", 
             "timestamp": datetime.now().isoformat(),
             "error": str(e)
         }
+
+# =============================================================================
+# PHASE 2: NEW APPLICATION DOMAINS & INFRASTRUCTURE UPGRADES
+# =============================================================================
+
+# AI Integration Hub Endpoints
+@app.post("/api/ai/generate-code-advanced")
+@track_request("POST", "/api/ai/generate-code-advanced")
+async def generate_code_advanced(request: dict, user=Depends(get_current_user)):
+    """Advanced AI-powered code generation using multiple providers"""
+    if not AI_HUB_ENABLED:
+        raise HTTPException(status_code=503, detail="AI Integration Hub not available")
+    
+    try:
+        # Create code generation request
+        code_request = CodeGenerationRequest(
+            blueprint_id=request.get('blueprint_id', ''),
+            target_language=CodeLanguage(request.get('target_language', 'python')),
+            framework=request.get('framework', 'fastapi'),
+            requirements=request.get('requirements', []),
+            context=request.get('context', {}),
+            ai_provider=AIProvider(request.get('ai_provider', 'openai')),
+            advanced_features=request.get('advanced_features', True)
+        )
+        
+        result = await ai_hub.generate_code_advanced(code_request)
+        
+        record_metric("ai_code_generation", 1, {
+            "provider": result.ai_metadata.provider.value,
+            "language": code_request.target_language.value,
+            "tenant_id": user.tenant_id
+        })
+        
+        return {
+            "files": result.files,
+            "documentation": result.documentation,
+            "tests": result.tests,
+            "dependencies": result.dependencies,
+            "deployment_config": result.deployment_config,
+            "quality_score": result.quality_score,
+            "ai_metadata": {
+                "provider": result.ai_metadata.provider.value,
+                "model": result.ai_metadata.model,
+                "tokens_used": result.ai_metadata.tokens_used,
+                "cost_estimate": result.ai_metadata.cost_estimate,
+                "response_time_ms": result.ai_metadata.response_time_ms
+            },
+            "generated_at": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        record_error(e, {"endpoint": "generate_code_advanced", "user_id": user.id})
+        raise HTTPException(status_code=500, detail=f"Code generation failed: {str(e)}")
+
+@app.get("/api/ai/providers")
+@track_request("GET", "/api/ai/providers")
+async def get_ai_providers(user=Depends(get_current_user)):
+    """Get available AI providers and their capabilities"""
+    if not AI_HUB_ENABLED:
+        raise HTTPException(status_code=503, detail="AI Integration Hub not available")
+    
+    return {
+        "providers": [
+            {
+                "id": "openai",
+                "name": "OpenAI",
+                "models": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"],
+                "capabilities": ["code_generation", "documentation", "testing"],
+                "available": bool(os.getenv('OPENAI_API_KEY'))
+            },
+            {
+                "id": "claude",
+                "name": "Anthropic Claude",
+                "models": ["claude-3-opus", "claude-3-sonnet", "claude-3-haiku"],
+                "capabilities": ["code_generation", "analysis", "refactoring"],
+                "available": bool(os.getenv('CLAUDE_API_KEY'))
+            },
+            {
+                "id": "perplexity",
+                "name": "Perplexity",
+                "models": ["pplx-7b-online", "pplx-70b-online"],
+                "capabilities": ["research", "documentation", "code_explanation"],
+                "available": bool(os.getenv('PERPLEXITY_API_KEY'))
+            }
+        ]
+    }
+
+# Workflow Automation Endpoints
+@app.post("/api/workflows")
+@track_request("POST", "/api/workflows")
+async def create_workflow(workflow_data: dict, user=Depends(get_current_user)):
+    """Create a new automated workflow"""
+    if not WORKFLOW_ENABLED:
+        raise HTTPException(status_code=503, detail="Workflow Automation not available")
+    
+    try:
+        workflow_data['owner_id'] = user.id
+        workflow_data['tenant_id'] = user.tenant_id
+        
+        workflow = await workflow_engine.create_workflow(workflow_data)
+        
+        record_metric("workflow_created", 1, {"tenant_id": user.tenant_id})
+        
+        return {
+            "workflow_id": workflow.id,
+            "name": workflow.name,
+            "description": workflow.description,
+            "steps": len(workflow.steps),
+            "triggers": len(workflow.triggers),
+            "created_at": workflow.created_at.isoformat()
+        }
+        
+    except Exception as e:
+        record_error(e, {"endpoint": "create_workflow", "user_id": user.id})
+        raise HTTPException(status_code=500, detail=f"Workflow creation failed: {str(e)}")
+
+@app.post("/api/workflows/{workflow_id}/execute")
+@track_request("POST", "/api/workflows/execute")
+async def execute_workflow(workflow_id: str, context: dict = None, user=Depends(get_current_user)):
+    """Execute a workflow"""
+    if not WORKFLOW_ENABLED:
+        raise HTTPException(status_code=503, detail="Workflow Automation not available")
+    
+    try:
+        execution = await workflow_engine.execute_workflow(workflow_id, context or {})
+        
+        record_metric("workflow_executed", 1, {"tenant_id": user.tenant_id})
+        
+        return {
+            "execution_id": execution.id,
+            "workflow_id": execution.workflow_id,
+            "status": execution.status.value,
+            "started_at": execution.started_at.isoformat(),
+            "context": execution.context
+        }
+        
+    except Exception as e:
+        record_error(e, {"endpoint": "execute_workflow", "workflow_id": workflow_id})
+        raise HTTPException(status_code=500, detail=f"Workflow execution failed: {str(e)}")
+
+@app.get("/api/workflows/{execution_id}/status")
+@track_request("GET", "/api/workflows/status")
+async def get_workflow_status(execution_id: str, user=Depends(get_current_user)):
+    """Get workflow execution status"""
+    if not WORKFLOW_ENABLED:
+        raise HTTPException(status_code=503, detail="Workflow Automation not available")
+    
+    try:
+        execution = await workflow_engine.get_workflow_status(execution_id)
+        if not execution:
+            raise HTTPException(status_code=404, detail="Workflow execution not found")
+        
+        return {
+            "execution_id": execution.id,
+            "workflow_id": execution.workflow_id,
+            "status": execution.status.value,
+            "started_at": execution.started_at.isoformat(),
+            "completed_at": execution.completed_at.isoformat() if execution.completed_at else None,
+            "current_step": execution.current_step,
+            "step_results": execution.step_results,
+            "error_message": execution.error_message
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        record_error(e, {"endpoint": "get_workflow_status", "execution_id": execution_id})
+        raise HTTPException(status_code=500, detail=f"Status retrieval failed: {str(e)}")
+
+@app.get("/api/workflows/templates")
+@track_request("GET", "/api/workflows/templates")
+async def get_workflow_templates(user=Depends(get_current_user)):
+    """Get available workflow templates"""
+    if not WORKFLOW_ENABLED:
+        raise HTTPException(status_code=503, detail="Workflow Automation not available")
+    
+    return {"templates": workflow_engine.get_workflow_templates()}
+
+# Enterprise Analytics Endpoints
+@app.get("/api/analytics/dashboards")
+@track_request("GET", "/api/analytics/dashboards")
+async def get_dashboards(user=Depends(require_role(UserRole.DEVELOPER))):
+    """Get available analytics dashboards"""
+    if not ANALYTICS_ENABLED:
+        raise HTTPException(status_code=503, detail="Enterprise Analytics not available")
+    
+    return {"dashboards": enterprise_analytics.get_available_dashboards()}
+
+@app.get("/api/analytics/dashboards/{dashboard_id}")
+@track_request("GET", "/api/analytics/dashboard")
+async def get_dashboard_data(dashboard_id: str, user=Depends(require_role(UserRole.DEVELOPER))):
+    """Get complete dashboard data"""
+    if not ANALYTICS_ENABLED:
+        raise HTTPException(status_code=503, detail="Enterprise Analytics not available")
+    
+    try:
+        dashboard_data = await enterprise_analytics.get_dashboard_data(dashboard_id)
+        
+        record_metric("dashboard_viewed", 1, {"dashboard_id": dashboard_id, "tenant_id": user.tenant_id})
+        
+        return dashboard_data
+        
+    except Exception as e:
+        record_error(e, {"endpoint": "get_dashboard_data", "dashboard_id": dashboard_id})
+        raise HTTPException(status_code=500, detail=f"Dashboard data retrieval failed: {str(e)}")
+
+@app.post("/api/analytics/queries")
+@track_request("POST", "/api/analytics/queries")
+async def create_custom_query(query_data: dict, user=Depends(require_role(UserRole.TENANT_ADMIN))):
+    """Create a custom analytics query"""
+    if not ANALYTICS_ENABLED:
+        raise HTTPException(status_code=503, detail="Enterprise Analytics not available")
+    
+    try:
+        query = await enterprise_analytics.create_custom_query(query_data)
+        
+        record_metric("custom_query_created", 1, {"tenant_id": user.tenant_id})
+        
+        return {
+            "query_id": query.id,
+            "name": query.name,
+            "data_source": query.data_source.value,
+            "cache_ttl": query.cache_ttl
+        }
+        
+    except Exception as e:
+        record_error(e, {"endpoint": "create_custom_query", "user_id": user.id})
+        raise HTTPException(status_code=500, detail=f"Query creation failed: {str(e)}")
+
+@app.post("/api/analytics/queries/{query_id}/execute")
+@track_request("POST", "/api/analytics/execute-query")
+async def execute_analytics_query(query_id: str, parameters: dict = None, user=Depends(require_role(UserRole.DEVELOPER))):
+    """Execute an analytics query"""
+    if not ANALYTICS_ENABLED:
+        raise HTTPException(status_code=503, detail="Enterprise Analytics not available")
+    
+    try:
+        result = await enterprise_analytics.execute_query(query_id, parameters)
+        
+        record_metric("query_executed", 1, {"query_id": query_id, "tenant_id": user.tenant_id})
+        
+        return result
+        
+    except Exception as e:
+        record_error(e, {"endpoint": "execute_analytics_query", "query_id": query_id})
+        raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
+
+@app.get("/api/analytics/real-time")
+@track_request("GET", "/api/analytics/real-time")
+async def get_real_time_metrics(user=Depends(require_role(UserRole.DEVELOPER))):
+    """Get real-time system metrics"""
+    if not ANALYTICS_ENABLED:
+        raise HTTPException(status_code=503, detail="Enterprise Analytics not available")
+    
+    try:
+        metrics = await enterprise_analytics.get_real_time_metrics()
+        return metrics
+        
+    except Exception as e:
+        record_error(e, {"endpoint": "get_real_time_metrics"})
+        raise HTTPException(status_code=500, detail=f"Real-time metrics retrieval failed: {str(e)}")
+
+# API Gateway Management Endpoints
+@app.get("/api/gateway/integrations")
+@track_request("GET", "/api/gateway/integrations")
+async def get_integrations(user=Depends(require_role(UserRole.TENANT_ADMIN))):
+    """Get available API integrations"""
+    if not API_GATEWAY_ENABLED:
+        raise HTTPException(status_code=503, detail="API Gateway not available")
+    
+    integrations = []
+    for integration_id, integration in api_gateway.integrations.items():
+        integrations.append({
+            "id": integration.id,
+            "name": integration.name,
+            "type": integration.type.value,
+            "base_url": integration.base_url,
+            "is_active": integration.is_active,
+            "health_status": api_gateway.health_status.get(integration_id, {"status": "unknown"})
+        })
+    
+    return {"integrations": integrations}
+
+@app.post("/api/gateway/integrations")
+@track_request("POST", "/api/gateway/integrations")
+async def add_integration(integration_data: dict, user=Depends(require_role(UserRole.TENANT_ADMIN))):
+    """Add new API integration"""
+    if not API_GATEWAY_ENABLED:
+        raise HTTPException(status_code=503, detail="API Gateway not available")
+    
+    try:
+        integration_data['tenant_id'] = user.tenant_id
+        integration = await api_gateway.add_integration(integration_data)
+        
+        record_metric("integration_added", 1, {"tenant_id": user.tenant_id})
+        
+        return {
+            "integration_id": integration.id,
+            "name": integration.name,
+            "type": integration.type.value,
+            "base_url": integration.base_url
+        }
+        
+    except Exception as e:
+        record_error(e, {"endpoint": "add_integration", "user_id": user.id})
+        raise HTTPException(status_code=500, detail=f"Integration creation failed: {str(e)}")
+
+@app.get("/api/gateway/health")
+@track_request("GET", "/api/gateway/health")
+async def gateway_health_check(user=Depends(require_role(UserRole.DEVELOPER))):
+    """Perform health checks on all integrations"""
+    if not API_GATEWAY_ENABLED:
+        raise HTTPException(status_code=503, detail="API Gateway not available")
+    
+    try:
+        health_results = await api_gateway.health_check_integrations()
+        return {"health_checks": health_results}
+        
+    except Exception as e:
+        record_error(e, {"endpoint": "gateway_health_check"})
+        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+
+@app.get("/api/gateway/stats")
+@track_request("GET", "/api/gateway/stats")
+async def get_gateway_stats(user=Depends(require_role(UserRole.DEVELOPER))):
+    """Get API gateway usage statistics"""
+    if not API_GATEWAY_ENABLED:
+        raise HTTPException(status_code=503, detail="API Gateway not available")
+    
+    try:
+        stats = api_gateway.get_integration_stats()
+        return {"stats": stats}
+        
+    except Exception as e:
+        record_error(e, {"endpoint": "get_gateway_stats"})
+        raise HTTPException(status_code=500, detail=f"Stats retrieval failed: {str(e)}")
+
+# Enhanced System Information
+@app.get("/api/system/info")
+@track_request("GET", "/api/system/info")
+async def get_system_info(user=Depends(require_role(UserRole.TENANT_ADMIN))):
+    """Get comprehensive system information"""
+    return {
+        "service": "Nokode AgentOS Enterprise",
+        "version": "2.0.0",
+        "phase": "Phase 2 - Complete",
+        "features": {
+            "phase_1": {
+                "ml_blueprint_analyzer": ML_ENABLED,
+                "realtime_collaboration": COLLABORATION_ENABLED,
+                "multi_tenant_auth": AUTH_ENABLED,
+                "observability_stack": OBSERVABILITY_ENABLED
+            },
+            "phase_2": {
+                "ai_integration_hub": AI_HUB_ENABLED,
+                "workflow_automation": WORKFLOW_ENABLED,
+                "enterprise_analytics": ANALYTICS_ENABLED,
+                "api_gateway": API_GATEWAY_ENABLED
+            }
+        },
+        "capabilities": [
+            "AI-powered code generation with multiple providers",
+            "Advanced workflow automation and orchestration",
+            "Enterprise-grade analytics and reporting",
+            "Centralized API gateway and integration management",
+            "Real-time collaborative editing",
+            "Multi-tenant authentication with SSO",
+            "Comprehensive monitoring and observability",
+            "ML-powered blueprint analysis and recommendations"
+        ],
+        "timestamp": datetime.now().isoformat()
+    }
 
 @app.get("/")
 async def root():
