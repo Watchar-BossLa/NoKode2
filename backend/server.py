@@ -33,16 +33,23 @@ fastapi_generator = FastAPIGenerator()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Nokode AgentOS", description="AI-Powered No-Code Platform", version="1.0.0")
+app = FastAPI(
+    title="Nokode AgentOS Enterprise", 
+    description="AI-Powered No-Code Platform with Enterprise Features", 
+    version="2.0.0"
+)
 
-# CORS middleware - more specific for production
+# Start observability stack
+observability.start_monitoring()
+
+# CORS middleware - production-ready configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000", 
         "http://127.0.0.1:3000", 
         "http://0.0.0.0:3000",
-        "*"  # Allow all for development
+        "*"  # In production, replace with specific domains
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -53,9 +60,23 @@ app.add_middleware(
 @app.middleware("http")
 async def log_requests(request, call_next):
     start_time = datetime.now()
+    
+    # Extract tenant from host header  
+    host = request.headers.get("host", "localhost")
+    tenant = await auth_manager.get_tenant_by_domain(host.split(":")[0])
+    tenant_id = tenant.id if tenant else "default"
+    
     logger.info(f"Request: {request.method} {request.url}")
     response = await call_next(request)
     process_time = (datetime.now() - start_time).total_seconds()
+    
+    # Record metrics
+    record_metric("http_request", 1, {
+        "method": request.method,
+        "status_code": str(response.status_code),
+        "tenant_id": tenant_id
+    })
+    
     logger.info(f"Response: {response.status_code} - Time: {process_time:.4f}s")
     return response
 
