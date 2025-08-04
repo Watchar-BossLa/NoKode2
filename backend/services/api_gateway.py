@@ -234,7 +234,7 @@ class APIGateway:
                 method="POST",
                 integration_id="openai",
                 upstream_path="/chat/completions",
-                rate_limits=[RateLimit(RateLimitType.PER_MINUTE, 20)],
+                rate_limits=[RateLimit(RateLimitType.PER_MINUTE, 20, 60)],
                 cache_ttl=300
             ),
             APIRoute(
