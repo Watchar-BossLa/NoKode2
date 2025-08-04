@@ -255,7 +255,7 @@ class APIGateway:
                 method="POST",
                 integration_id="claude",
                 upstream_path="/messages",
-                rate_limits=[RateLimit(RateLimitType.PER_MINUTE, 15)]
+                rate_limits=[RateLimit(RateLimitType.PER_MINUTE, 15, 60)]
             )
         ]
         
