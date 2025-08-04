@@ -212,7 +212,277 @@ class CodeGenerationRequest(BaseModel):
     blueprint_id: str
     target: str  # "frontend" or "backend"
 
-# API Routes
+# Enterprise API Routes
+
+# Authentication & Multi-tenancy
+@app.post("/api/auth/register")
+@track_request("POST", "/api/auth/register")
+async def register(request_data: dict, tenant: dict = Depends(get_current_tenant)):
+    """Register a new user"""
+    try:
+        user = await auth_manager.register_user(tenant["id"], request_data)
+        record_metric("user_registered", 1, {"tenant_id": tenant["id"]})
+        return {"message": "User registered successfully", "user_id": user.id}
+    except Exception as e:
+        record_error(e, {"endpoint": "register", "tenant_id": tenant["id"]})
+        raise
+
+@app.post("/api/auth/login")
+@track_request("POST", "/api/auth/login")
+async def login(request: Request, credentials: dict):
+    """Authenticate user"""
+    try:
+        # Get client info
+        ip_address = request.client.host
+        user_agent = request.headers.get("user-agent", "")
+        
+        # Determine tenant from host
+        host = request.headers.get("host", "localhost")
+        tenant = await auth_manager.get_tenant_by_domain(host.split(":")[0])
+        tenant_id = tenant.id if tenant else "default"
+        
+        result = await auth_manager.authenticate_user(
+            tenant_id, 
+            credentials["email"], 
+            credentials["password"],
+            ip_address,
+            user_agent
+        )
+        
+        record_metric("user_login", 1, {"tenant_id": tenant_id})
+        return result
+        
+    except Exception as e:
+        record_error(e, {"endpoint": "login"})
+        raise
+
+@app.post("/api/auth/sso/{provider}")
+@track_request("POST", "/api/auth/sso")
+async def sso_login(provider: str, request: Request, auth_data: dict):
+    """SSO authentication"""
+    try:
+        ip_address = request.client.host
+        user_agent = request.headers.get("user-agent", "")
+        
+        host = request.headers.get("host", "localhost")
+        tenant = await auth_manager.get_tenant_by_domain(host.split(":")[0])
+        tenant_id = tenant.id if tenant else "default"
+        
+        result = await auth_manager.sso_authenticate(
+            tenant_id,
+            provider,
+            auth_data["code"],
+            auth_data["redirect_uri"],
+            ip_address,
+            user_agent
+        )
+        
+        record_metric("sso_login", 1, {"provider": provider, "tenant_id": tenant_id})
+        return result
+        
+    except Exception as e:
+        record_error(e, {"endpoint": "sso_login", "provider": provider})
+        raise
+
+@app.post("/api/auth/refresh")
+@track_request("POST", "/api/auth/refresh")
+async def refresh_token(token_data: dict):
+    """Refresh access token"""
+    try:
+        result = await auth_manager.refresh_token(token_data["refresh_token"])
+        return result
+    except Exception as e:
+        record_error(e, {"endpoint": "refresh_token"})
+        raise
+
+@app.post("/api/auth/logout")
+@track_request("POST", "/api/auth/logout")
+async def logout(user=Depends(get_current_user)):
+    """Logout user"""
+    try:
+        # In a real implementation, get the access token from the request
+        await auth_manager.logout("dummy_token")  
+        return {"message": "Logged out successfully"}
+    except Exception as e:
+        record_error(e, {"endpoint": "logout"})
+        raise
+
+# Blueprint Analysis with ML
+@app.post("/api/blueprints/{blueprint_id}/analyze")
+@track_request("POST", "/api/blueprints/analyze")
+async def analyze_blueprint(blueprint_id: str, user=Depends(get_current_user)):
+    """Get ML-powered blueprint analysis"""
+    try:
+        blueprint = next((b for b in mock_db["blueprints"] if b["id"] == blueprint_id), None)
+        if not blueprint:
+            raise HTTPException(status_code=404, detail="Blueprint not found")
+        
+        analysis = await ml_analyzer.analyze_blueprint(blueprint)
+        
+        record_metric("blueprint_analyzed", 1, {"tenant_id": user.tenant_id})
+        
+        return {
+            "blueprint_id": blueprint_id,
+            "analysis": {
+                "complexity_score": analysis.complexity_score,
+                "recommended_components": [
+                    {
+                        "component_type": rec.component_type,
+                        "confidence": rec.confidence,
+                        "reasoning": rec.reasoning,
+                        "dependencies": rec.dependencies,
+                        "estimated_complexity": rec.estimated_complexity,
+                        "implementation_time": rec.implementation_time
+                    }
+                    for rec in analysis.recommended_components
+                ],
+                "architectural_patterns": analysis.architectural_patterns,
+                "technology_stack": analysis.technology_stack,
+                "estimated_development_time": analysis.estimated_development_time,
+                "risk_factors": analysis.risk_factors,
+                "optimization_suggestions": analysis.optimization_suggestions
+            }
+        }
+        
+    except Exception as e:
+        record_error(e, {"endpoint": "analyze_blueprint", "blueprint_id": blueprint_id})
+        raise
+
+# Real-time Collaboration WebSocket
+@app.websocket("/api/collaborate/{document_id}")
+async def collaborate_websocket(websocket: WebSocket, document_id: str, user_id: str):
+    """WebSocket endpoint for real-time collaboration"""
+    try:
+        await collaboration_manager.connect_user(document_id, user_id, websocket)
+        
+        while True:
+            try:
+                data = await websocket.receive_text()
+                message = json.loads(data)
+                
+                if message["type"] == "operation":
+                    await collaboration_manager.handle_operation(
+                        document_id, user_id, message["data"]
+                    )
+                elif message["type"] == "cursor":
+                    await collaboration_manager.handle_cursor_update(
+                        document_id, user_id, message["data"]
+                    )
+                    
+                record_metric("collaboration_operation", 1, {"document_id": document_id})
+                
+            except WebSocketDisconnect:
+                break
+            except Exception as e:
+                logger.error(f"Collaboration error: {e}")
+                await websocket.close()
+                break
+                
+    except Exception as e:
+        record_error(e, {"endpoint": "collaboration", "document_id": document_id})
+    finally:
+        await collaboration_manager.disconnect_user(document_id, user_id)
+
+@app.get("/api/collaborate/{document_id}/stats")
+@track_request("GET", "/api/collaborate/stats")
+async def get_collaboration_stats(document_id: str, user=Depends(get_current_user)):
+    """Get collaboration statistics for a document"""
+    try:
+        stats = await collaboration_manager.get_document_stats(document_id)
+        return stats
+    except Exception as e:
+        record_error(e, {"endpoint": "collaboration_stats", "document_id": document_id})
+        raise
+
+# Monitoring & Observability
+@app.get("/api/metrics")
+@track_request("GET", "/api/metrics")
+async def get_metrics(user=Depends(require_role(UserRole.TENANT_ADMIN))):
+    """Get system metrics (admin only)"""
+    try:
+        return observability.get_metrics_summary()
+    except Exception as e:
+        record_error(e, {"endpoint": "metrics"})
+        raise
+
+@app.get("/api/health")
+async def health_check():
+    """Enhanced health check with detailed status"""
+    try:
+        health_data = {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "service": "Nokode AgentOS Enterprise",
+            "version": "2.0.0",
+            "uptime_seconds": observability.get_metrics_summary()["uptime_seconds"],
+            "checks": observability.health_checks
+        }
+        
+        # Determine overall status
+        if any(check.status != "healthy" for check in observability.health_checks.values()):
+            health_data["status"] = "degraded"
+        
+        return health_data
+        
+    except Exception as e:
+        record_error(e, {"endpoint": "health"})
+        return {
+            "status": "unhealthy", 
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e)
+        }
+
+@app.get("/api/alerts")
+@track_request("GET", "/api/alerts")
+async def get_alerts(resolved: Optional[bool] = None, user=Depends(require_role(UserRole.TENANT_ADMIN))):
+    """Get system alerts (admin only)"""
+    try:
+        return observability.get_alerts(resolved)
+    except Exception as e:
+        record_error(e, {"endpoint": "alerts"})
+        raise
+
+@app.post("/api/alerts/{alert_id}/resolve")
+@track_request("POST", "/api/alerts/resolve")
+async def resolve_alert(alert_id: str, user=Depends(require_role(UserRole.TENANT_ADMIN))):
+    """Resolve an alert (admin only)"""
+    try:
+        await observability.resolve_alert(alert_id)
+        return {"message": "Alert resolved", "alert_id": alert_id}
+    except Exception as e:
+        record_error(e, {"endpoint": "resolve_alert", "alert_id": alert_id})
+        raise
+
+# Tenant Management
+@app.post("/api/tenants")
+@track_request("POST", "/api/tenants")
+async def create_tenant(tenant_data: dict, user=Depends(require_role(UserRole.SUPER_ADMIN))):
+    """Create a new tenant (super admin only)"""
+    try:
+        tenant = await auth_manager.create_tenant(tenant_data)
+        record_metric("tenant_created", 1)
+        return {"message": "Tenant created", "tenant_id": tenant.id}
+    except Exception as e:
+        record_error(e, {"endpoint": "create_tenant"})
+        raise
+
+@app.post("/api/tenants/{tenant_id}/sso")
+@track_request("POST", "/api/tenants/sso")
+async def configure_tenant_sso(tenant_id: str, sso_config: dict, user=Depends(require_role(UserRole.TENANT_ADMIN))):
+    """Configure SSO for a tenant (tenant admin only)"""
+    try:
+        # Ensure user can only configure SSO for their own tenant
+        if user.role != UserRole.SUPER_ADMIN and user.tenant_id != tenant_id:
+            raise HTTPException(status_code=403, detail="Can only configure SSO for your own tenant")
+        
+        await auth_manager.configure_sso(tenant_id, sso_config)
+        record_metric("sso_configured", 1, {"tenant_id": tenant_id})
+        return {"message": "SSO configured successfully"}
+    except Exception as e:
+        record_error(e, {"endpoint": "configure_sso", "tenant_id": tenant_id})
+        raise
+
+# Enhanced Blueprint & Project endpoints with enterprise features
 @app.get("/api/health")
 async def health_check():
     logger.info("Health check requested")
