@@ -12,6 +12,12 @@ import CodeEditor from './components/CodeEditor';
 import ProjectGallery from './components/ProjectGallery';
 import Landing from './components/Landing';
 
+// Phase 2 Components
+import AIHub from './components/AIHub';
+import WorkflowDashboard from './components/WorkflowDashboard';
+import EnterpriseAnalytics from './components/EnterpriseAnalytics';
+import APIGateway from './components/APIGateway';
+
 // Icons
 import { 
   Home, 
