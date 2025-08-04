@@ -723,7 +723,7 @@ class NokodeAPITester:
                 return 1
 
 def main():
-    tester = NokodeAPITester("http://localhost:8001")
+    tester = NokodeAPITester("https://62fe1321-2027-4554-bc39-bd0fbb210542.preview.emergentagent.com")
     return tester.run_all_tests()
 
 if __name__ == "__main__":
