@@ -266,6 +266,381 @@ class NokodeAPITester:
             print("   Blueprint deleted successfully")
         return success
 
+    # =============================================================================
+    # PHASE 2: ENTERPRISE FEATURES TESTING
+    # =============================================================================
+
+    def test_root_endpoint(self):
+        """Test root endpoint with platform information"""
+        success, response = self.run_test(
+            "Root Endpoint",
+            "GET",
+            "",
+            200
+        )
+        if success:
+            expected_fields = ['message', 'status', 'version', 'docs']
+            if all(field in response for field in expected_fields):
+                print(f"   Platform: {response.get('message')}")
+                print(f"   Version: {response.get('version')}")
+                print(f"   Status: {response.get('status')}")
+            else:
+                print("   ⚠️  Root endpoint missing some fields")
+        return success
+
+    def test_system_info(self):
+        """Test system info endpoint"""
+        success, response = self.run_test(
+            "System Information",
+            "GET",
+            "api/system/info",
+            200
+        )
+        if success:
+            expected_fields = ['service', 'version', 'phase', 'features', 'capabilities']
+            if all(field in response for field in expected_fields):
+                print(f"   Service: {response.get('service')}")
+                print(f"   Phase: {response.get('phase')}")
+                print(f"   Capabilities: {len(response.get('capabilities', []))}")
+                
+                # Check Phase 2 features
+                phase2_features = response.get('features', {}).get('phase_2', {})
+                print(f"   Phase 2 Features: {phase2_features}")
+            else:
+                print("   ⚠️  System info missing some fields")
+        return success
+
+    def test_enhanced_health_check(self):
+        """Test enhanced health check with Phase 2 features"""
+        success, response = self.run_test(
+            "Enhanced Health Check",
+            "GET",
+            "api/health",
+            200
+        )
+        if success:
+            expected_fields = ['status', 'timestamp', 'service', 'version', 'features']
+            if all(field in response for field in expected_fields):
+                print(f"   Service: {response.get('service')}")
+                print(f"   Version: {response.get('version')}")
+                
+                # Check all Phase 2 features
+                features = response.get('features', {})
+                phase2_features = ['ai_hub_enabled', 'workflow_enabled', 'analytics_enabled', 'api_gateway_enabled']
+                for feature in phase2_features:
+                    status = features.get(feature, False)
+                    print(f"   {feature}: {status}")
+            else:
+                print("   ⚠️  Health check missing some fields")
+        return success
+
+    def test_ai_providers(self):
+        """Test AI providers endpoint"""
+        success, response = self.run_test(
+            "AI Providers",
+            "GET",
+            "api/ai/providers",
+            200
+        )
+        if success and 'providers' in response:
+            providers = response['providers']
+            print(f"   Found {len(providers)} AI providers")
+            
+            # Verify we have at least 3 providers as specified
+            if len(providers) >= 3:
+                for provider in providers:
+                    print(f"   - {provider.get('name')}: {provider.get('models', [])}")
+            else:
+                print("   ⚠️  Expected at least 3 AI providers")
+        return success
+
+    def test_ai_generate_code_advanced(self):
+        """Test advanced AI code generation"""
+        if not self.created_blueprint_id:
+            print("   ⚠️  No blueprint ID available, using default")
+            blueprint_id = "1"  # Use existing blueprint
+        else:
+            blueprint_id = self.created_blueprint_id
+
+        test_data = {
+            "blueprint_id": blueprint_id,
+            "target_language": "python",
+            "framework": "fastapi",
+            "requirements": ["authentication", "database"],
+            "context": {"project_type": "web_api"},
+            "ai_provider": "openai",
+            "advanced_features": True
+        }
+        
+        success, response = self.run_test(
+            "Advanced AI Code Generation",
+            "POST",
+            "api/ai/generate-code-advanced",
+            200,
+            data=test_data
+        )
+        
+        if success:
+            expected_fields = ['files', 'documentation', 'tests', 'dependencies', 'quality_score']
+            if all(field in response for field in expected_fields):
+                print(f"   Generated files: {len(response.get('files', {}))}")
+                print(f"   Quality score: {response.get('quality_score')}")
+                print(f"   Dependencies: {len(response.get('dependencies', []))}")
+            else:
+                print("   ⚠️  Advanced code generation missing some fields")
+        return success
+
+    def test_workflow_templates(self):
+        """Test workflow templates endpoint"""
+        success, response = self.run_test(
+            "Workflow Templates",
+            "GET",
+            "api/workflows/templates",
+            200
+        )
+        if success and 'templates' in response:
+            templates = response['templates']
+            print(f"   Found {len(templates)} workflow templates")
+            
+            # Verify we have at least 3 templates as specified
+            if len(templates) >= 3:
+                for template in templates[:3]:  # Show first 3
+                    print(f"   - {template.get('name')}: {template.get('description', '')[:50]}...")
+            else:
+                print("   ⚠️  Expected at least 3 workflow templates")
+        return success
+
+    def test_create_workflow(self):
+        """Test workflow creation"""
+        workflow_data = {
+            "name": "Test Workflow",
+            "description": "A test workflow for API testing",
+            "triggers": [{"type": "manual", "config": {}}],
+            "steps": [
+                {"type": "log", "config": {"message": "Test step"}},
+                {"type": "delay", "config": {"seconds": 1}}
+            ]
+        }
+        
+        success, response = self.run_test(
+            "Create Workflow",
+            "POST",
+            "api/workflows",
+            200,
+            data=workflow_data
+        )
+        
+        if success and 'workflow_id' in response:
+            self.created_workflow_id = response['workflow_id']
+            print(f"   Workflow created with ID: {self.created_workflow_id}")
+            print(f"   Steps: {response.get('steps')}")
+        return success
+
+    def test_execute_workflow(self):
+        """Test workflow execution"""
+        if not self.created_workflow_id:
+            print("   ⚠️  No workflow ID available, skipping test")
+            return False
+            
+        context_data = {"test_param": "test_value"}
+        
+        success, response = self.run_test(
+            "Execute Workflow",
+            "POST",
+            f"api/workflows/{self.created_workflow_id}/execute",
+            200,
+            data=context_data
+        )
+        
+        if success and 'execution_id' in response:
+            self.created_execution_id = response['execution_id']
+            print(f"   Execution started with ID: {self.created_execution_id}")
+            print(f"   Status: {response.get('status')}")
+        return success
+
+    def test_workflow_status(self):
+        """Test workflow execution status"""
+        if not self.created_execution_id:
+            print("   ⚠️  No execution ID available, skipping test")
+            return False
+            
+        success, response = self.run_test(
+            "Workflow Execution Status",
+            "GET",
+            f"api/workflows/{self.created_execution_id}/status",
+            200
+        )
+        
+        if success:
+            expected_fields = ['execution_id', 'workflow_id', 'status', 'started_at']
+            if all(field in response for field in expected_fields):
+                print(f"   Execution status: {response.get('status')}")
+                print(f"   Current step: {response.get('current_step')}")
+            else:
+                print("   ⚠️  Workflow status missing some fields")
+        return success
+
+    def test_analytics_dashboards(self):
+        """Test analytics dashboards endpoint"""
+        success, response = self.run_test(
+            "Analytics Dashboards",
+            "GET",
+            "api/analytics/dashboards",
+            200
+        )
+        if success and 'dashboards' in response:
+            dashboards = response['dashboards']
+            print(f"   Found {len(dashboards)} analytics dashboards")
+            
+            # Verify we have at least 4 dashboards as specified
+            if len(dashboards) >= 4:
+                for dashboard in dashboards[:4]:  # Show first 4
+                    print(f"   - {dashboard.get('name')}: {dashboard.get('description', '')[:50]}...")
+            else:
+                print("   ⚠️  Expected at least 4 analytics dashboards")
+        return success
+
+    def test_dashboard_data(self):
+        """Test dashboard data retrieval"""
+        # Use a default dashboard ID
+        dashboard_id = "performance"
+        
+        success, response = self.run_test(
+            "Dashboard Data",
+            "GET",
+            f"api/analytics/dashboards/{dashboard_id}",
+            200
+        )
+        
+        if success:
+            expected_fields = ['dashboard_id', 'name', 'widgets']
+            if all(field in response for field in expected_fields):
+                print(f"   Dashboard: {response.get('name')}")
+                print(f"   Widgets: {len(response.get('widgets', []))}")
+            else:
+                print("   ⚠️  Dashboard data missing some fields")
+        return success
+
+    def test_real_time_metrics(self):
+        """Test real-time metrics endpoint"""
+        success, response = self.run_test(
+            "Real-time Metrics",
+            "GET",
+            "api/analytics/real-time",
+            200
+        )
+        if success:
+            expected_fields = ['timestamp', 'metrics']
+            if all(field in response for field in expected_fields):
+                metrics = response.get('metrics', {})
+                print(f"   Real-time metrics: {len(metrics)} categories")
+                for category, data in metrics.items():
+                    print(f"   - {category}: {data}")
+            else:
+                print("   ⚠️  Real-time metrics missing some fields")
+        return success
+
+    def test_create_analytics_query(self):
+        """Test custom analytics query creation"""
+        query_data = {
+            "name": "Test Query",
+            "description": "A test analytics query",
+            "data_source": "system_metrics",
+            "query": "SELECT * FROM metrics WHERE timestamp > NOW() - INTERVAL 1 HOUR",
+            "cache_ttl": 300
+        }
+        
+        success, response = self.run_test(
+            "Create Analytics Query",
+            "POST",
+            "api/analytics/queries",
+            200,
+            data=query_data
+        )
+        
+        if success and 'query_id' in response:
+            print(f"   Query created with ID: {response['query_id']}")
+            print(f"   Data source: {response.get('data_source')}")
+        return success
+
+    def test_gateway_integrations(self):
+        """Test API gateway integrations"""
+        success, response = self.run_test(
+            "Gateway Integrations",
+            "GET",
+            "api/gateway/integrations",
+            200
+        )
+        if success and 'integrations' in response:
+            integrations = response['integrations']
+            print(f"   Found {len(integrations)} API integrations")
+            
+            # Verify we have at least 4 integrations as specified
+            if len(integrations) >= 4:
+                for integration in integrations[:4]:  # Show first 4
+                    print(f"   - {integration.get('name')}: {integration.get('type')} ({integration.get('health_status', {}).get('status', 'unknown')})")
+            else:
+                print("   ⚠️  Expected at least 4 API integrations")
+        return success
+
+    def test_gateway_health(self):
+        """Test API gateway health checks"""
+        success, response = self.run_test(
+            "Gateway Health Check",
+            "GET",
+            "api/gateway/health",
+            200
+        )
+        if success and 'health_checks' in response:
+            health_checks = response['health_checks']
+            print(f"   Health checks for {len(health_checks)} integrations")
+            
+            for integration_id, health in health_checks.items():
+                print(f"   - {integration_id}: {health.get('status', 'unknown')}")
+        return success
+
+    def test_gateway_stats(self):
+        """Test API gateway statistics"""
+        success, response = self.run_test(
+            "Gateway Statistics",
+            "GET",
+            "api/gateway/stats",
+            200
+        )
+        if success and 'stats' in response:
+            stats = response['stats']
+            print(f"   Gateway statistics: {len(stats)} integrations")
+            
+            for integration_id, stat in stats.items():
+                print(f"   - {integration_id}: {stat.get('requests_count', 0)} requests")
+        return success
+
+    def test_add_gateway_integration(self):
+        """Test adding new API integration"""
+        integration_data = {
+            "name": "Test Integration",
+            "type": "rest_api",
+            "base_url": "https://api.example.com",
+            "auth_type": "api_key",
+            "config": {
+                "api_key": "test_key_123",
+                "timeout": 30
+            }
+        }
+        
+        success, response = self.run_test(
+            "Add Gateway Integration",
+            "POST",
+            "api/gateway/integrations",
+            200,
+            data=integration_data
+        )
+        
+        if success and 'integration_id' in response:
+            print(f"   Integration created with ID: {response['integration_id']}")
+            print(f"   Type: {response.get('type')}")
+        return success
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting Nokode AgentOS API Tests")
