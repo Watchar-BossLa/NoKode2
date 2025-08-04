@@ -68,10 +68,6 @@ project_generator = ProjectGenerator()
 react_generator = ReactComponentGenerator()
 fastapi_generator = FastAPIGenerator()
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 app = FastAPI(
     title="Nokode AgentOS Enterprise", 
     description="AI-Powered No-Code Platform with Enterprise Features", 
