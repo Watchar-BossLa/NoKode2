@@ -469,13 +469,21 @@ async def health_check():
             "timestamp": datetime.now().isoformat(),
             "service": "Nokode AgentOS Enterprise",
             "version": "2.0.0",
-            "uptime_seconds": observability.get_metrics_summary()["uptime_seconds"],
-            "checks": observability.health_checks
+            "features": {
+                "ml_enabled": ML_ENABLED,
+                "collaboration_enabled": COLLABORATION_ENABLED,
+                "auth_enabled": AUTH_ENABLED,
+                "observability_enabled": OBSERVABILITY_ENABLED
+            }
         }
         
-        # Determine overall status
-        if any(check.status != "healthy" for check in observability.health_checks.values()):
-            health_data["status"] = "degraded"
+        if OBSERVABILITY_ENABLED:
+            health_data["uptime_seconds"] = observability.get_metrics_summary()["uptime_seconds"]
+            health_data["checks"] = observability.health_checks
+            
+            # Determine overall status
+            if any(check.status != "healthy" for check in observability.health_checks.values()):
+                health_data["status"] = "degraded"
         
         return health_data
         
