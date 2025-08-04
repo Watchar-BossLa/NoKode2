@@ -96,7 +96,7 @@ class ObservabilityStack:
         # Background tasks
         self._monitoring_task = None
         
-        logger.info("Observability stack initialized", service=service_name)
+        self.logger.info("Observability stack initialized", service=service_name)
     
     def _setup_logging(self):
         """Setup structured logging with context"""
