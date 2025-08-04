@@ -4,12 +4,14 @@ import json
 from datetime import datetime
 
 class NokodeAPITester:
-    def __init__(self, base_url="http://localhost:8001"):
+    def __init__(self, base_url="https://62fe1321-2027-4554-bc39-bd0fbb210542.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
         self.created_blueprint_id = None
         self.created_project_id = None
+        self.created_workflow_id = None
+        self.created_execution_id = None
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
         """Run a single API test"""
