@@ -612,7 +612,10 @@ class NokodeAPITester:
             print(f"   Gateway statistics: {len(stats)} integrations")
             
             for integration_id, stat in stats.items():
-                print(f"   - {integration_id}: {stat.get('requests_count', 0)} requests")
+                if isinstance(stat, dict):
+                    print(f"   - {integration_id}: {stat.get('requests_count', 0)} requests")
+                else:
+                    print(f"   - {integration_id}: {stat}")
         return success
 
     def test_add_gateway_integration(self):
