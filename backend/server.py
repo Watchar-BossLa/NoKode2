@@ -402,6 +402,10 @@ async def analyze_blueprint(blueprint_id: str, user=Depends(get_current_user)):
 @app.websocket("/api/collaborate/{document_id}")
 async def collaborate_websocket(websocket: WebSocket, document_id: str, user_id: str):
     """WebSocket endpoint for real-time collaboration"""
+    if not COLLABORATION_ENABLED:
+        await websocket.close(code=1011, reason="Collaboration service not available")
+        return
+    
     try:
         await collaboration_manager.connect_user(document_id, user_id, websocket)
         
@@ -431,7 +435,8 @@ async def collaborate_websocket(websocket: WebSocket, document_id: str, user_id:
     except Exception as e:
         record_error(e, {"endpoint": "collaboration", "document_id": document_id})
     finally:
-        await collaboration_manager.disconnect_user(document_id, user_id)
+        if COLLABORATION_ENABLED:
+            await collaboration_manager.disconnect_user(document_id, user_id)
 
 @app.get("/api/collaborate/{document_id}/stats")
 @track_request("GET", "/api/collaborate/stats")
